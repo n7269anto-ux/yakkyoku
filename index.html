@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>薬局に行く前メモ+ AI v6</title>
+<style>
+:root{
+  --bg:#f6f8fc;--card:#fff;--ink:#132033;--muted:#667085;--line:#e4e9f2;
+  --blue:#2f6df6;--blue2:#eef4ff;--green:#137333;--green2:#edf7ee;
+  --yellow:#9a5b00;--yellow2:#fff7e6;--red:#c5221f;--red2:#fff1f0;
+  --purple:#6b3fd6;--purple2:#f4f0ff;--shadow:0 14px 34px rgba(19,32,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+  background:radial-gradient(circle at 0 0,#e7efff 0,transparent 34%),radial-gradient(circle at 100% 0,#eafff3 0,transparent 30%),var(--bg);
+  line-height:1.58;
+}
+.app{max-width:920px;margin:0 auto;padding:14px 14px calc(104px + env(safe-area-inset-bottom,0px))}
+header{position:sticky;top:0;z-index:20;padding:10px 0;background:rgba(246,248,252,.9);backdrop-filter:blur(14px)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:10px 12px;box-shadow:0 8px 20px rgba(19,32,51,.06)}
+.brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:900}
+.logo{width:36px;height:36px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(135deg,var(--blue),#57b5ff);color:#fff}
+.pill{font-size:12px;color:var(--muted);background:#f1f3f8;padding:7px 11px;border-radius:999px;white-space:nowrap}
+.progress{height:8px;background:#e8edf6;border-radius:999px;overflow:hidden;margin:10px 8px 0}.progress>div{height:100%;width:0;background:linear-gradient(90deg,var(--blue),#5fc889);transition:.2s}
+.page{display:none;animation:fade .18s}.page.active{display:block}@keyframes fade{from{opacity:.45;transform:translateY(6px)}to{opacity:1;transform:none}}
+.hero,.card{background:rgba(255,255,255,.97);border:1px solid var(--line);box-shadow:var(--shadow)}
+.hero{border-radius:30px;padding:24px 18px;margin:12px 0;background:linear-gradient(160deg,#fff,#f2f7ff)}
+.card{border-radius:24px;padding:18px;margin:12px 0}
+h1{font-size:30px;line-height:1.22;margin:8px 0 10px}h2{font-size:22px;line-height:1.28;margin:4px 0 12px}h3{font-size:16px;margin:16px 0 8px}
+p{margin:8px 0}.muted{color:var(--muted)}.small{font-size:13px}.bold{font-weight:900}
+.tags{display:flex;gap:6px;flex-wrap:wrap}.tag{display:inline-flex;align-items:center;gap:5px;font-size:12px;border-radius:999px;padding:6px 9px;background:#f1f3f8;color:var(--muted)}
+.grid{display:grid;gap:10px}.two{grid-template-columns:1fr 1fr}.three{grid-template-columns:repeat(3,1fr)}
+@media(max-width:740px){.two,.three{grid-template-columns:1fr}}
+button,.buttonLink{border:0;border-radius:17px;padding:14px 12px;font:inherit;font-weight:900;cursor:pointer;text-align:center;text-decoration:none;display:inline-block;-webkit-tap-highlight-color:transparent}
+button.primary,.buttonLink.primary{background:linear-gradient(135deg,var(--blue),#4ea2ff);color:#fff;box-shadow:0 10px 22px rgba(47,109,246,.22)}
+button.secondary,.buttonLink.secondary{background:#fff;border:1px solid var(--line);color:var(--ink)}
+button.soft,.buttonLink.soft{background:#f4f6fb;border:1px solid var(--line);color:var(--ink)}
+button.purple{background:linear-gradient(135deg,var(--purple),#8d65ff);color:#fff;box-shadow:0 10px 22px rgba(107,63,214,.18)}
+button:disabled{opacity:.45;cursor:wait}
+.option,.homeBtn{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;min-height:54px;cursor:pointer}
+.homeBtn{display:block;text-align:left;box-shadow:0 8px 20px rgba(19,32,51,.045)}
+.homeBtn strong{font-size:17px;color:#0874d7}.homeBtn span{display:block;color:var(--muted);font-size:13px;margin-top:4px}
+.option:active,.homeBtn:active{transform:scale(.995)}.option:has(input:checked){border-color:rgba(47,109,246,.65);background:var(--blue2);box-shadow:0 0 0 3px rgba(47,109,246,.08)}
+input[type=radio],input[type=checkbox]{width:21px;height:21px;accent-color:var(--blue);margin-top:2px;flex:0 0 auto}
+textarea,input[type=text],input[type=tel],input[type=url],select,input[type=file]{width:100%;font:inherit;border:1px solid var(--line);border-radius:16px;padding:13px;background:#fff;color:var(--ink)}
+textarea{min-height:120px;resize:vertical}
+.notice{border-radius:18px;padding:14px;margin:12px 0;border:1px solid var(--line)}
+.danger{background:var(--red2);border-color:#ffd0cc;color:#71140f}.warn{background:var(--yellow2);border-color:#ffe0a6;color:#603800}.ok{background:var(--green2);border-color:#cce9d2;color:#0b3d1c}.blue{background:var(--blue2);border-color:#cbdcff;color:#163c8a}.purpleBg{background:var(--purple2);border-color:#ded2ff;color:#35137a}
+ul{padding-left:1.2em}li{margin:6px 0}
+.fixed{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(246,248,252,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+.buttons{max-width:920px;margin:0 auto;display:grid;grid-template-columns:1fr 1.3fr;gap:10px}
+.hidden{display:none!important}
+.resultHero{border-radius:30px;padding:18px;margin:12px 0;border:1px solid var(--line);box-shadow:var(--shadow)}
+.resultHero.danger{background:linear-gradient(160deg,#fff,#fff1f0)}.resultHero.warn{background:linear-gradient(160deg,#fff,#fff7e6)}.resultHero.ok{background:linear-gradient(160deg,#fff,#edf7ee)}
+.statusBadge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:900;border-radius:999px;padding:7px 10px;background:#fff;border:1px solid var(--line)}
+.gentle{font-size:18px;font-weight:800;line-height:1.55;margin:12px 0}.bigAction{font-size:25px;line-height:1.25;font-weight:900;margin:10px 0 8px}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}@media(max-width:740px){.kpi{grid-template-columns:1fr}}
+.kpiBox{background:#fff;border:1px solid var(--line);border-radius:17px;padding:12px}.kpiBox .label{font-size:12px;color:var(--muted);font-weight:800}.kpiBox .value{font-size:15px;font-weight:900;margin-top:3px}
+.cardTitle{display:flex;align-items:center;justify-content:space-between;gap:10px}.miniCard{border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px}.rowCard{display:flex;gap:12px;align-items:flex-start}.num{width:32px;height:32px;border-radius:12px;display:grid;place-items:center;font-weight:900;background:var(--blue2);color:var(--blue);flex:0 0 auto}
+.itemTitle{font-weight:900;font-size:16px}.memo{white-space:pre-wrap;background:#0f172a;color:#edf3ff;border-radius:18px;padding:14px;font-size:13px;overflow:auto}
+details{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 13px;margin:10px 0}summary{font-weight:900;cursor:pointer}
+.copyRow,.connectGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}@media(max-width:740px){.copyRow,.connectGrid{grid-template-columns:1fr}}
+.preview{max-width:100%;max-height:220px;border-radius:18px;border:1px solid var(--line);display:none;margin-top:10px}
+.modeHeader{display:flex;align-items:center;gap:12px}.modeIcon{font-size:26px;width:46px;height:46px;border-radius:18px;display:grid;place-items:center;background:var(--blue2)}
+.footer{font-size:12px;color:var(--muted);padding:10px 4px}
+.aiBox{border:1px solid #ded2ff;background:linear-gradient(160deg,#fff,#f7f3ff);border-radius:22px;padding:16px;margin:14px 0}
+.aiOut{display:grid;gap:10px}
+.aiChip{border:1px solid var(--line);background:#fff;border-radius:16px;padding:12px}
+.loading{animation:pulse 1s infinite alternate}@keyframes pulse{from{opacity:.55}to{opacity:1}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="top">
+    <div class="brand"><div class="logo">AI</div><span>薬局に行く前メモ+ AI v6</span></div>
+    <div class="pill" id="stepText">ホーム</div>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+</header>
+
+<main>
+<section class="page active" id="home">
+  <div class="hero">
+    <div class="tags"><span class="tag">AI整理</span><span class="tag">ルール安全確認</span><span class="tag">薬剤師/医師へ接続</span></div>
+    <h1>自由に書いて、必要な行動へつなぐ</h1>
+    <p class="muted">AIは曖昧な不安を整理する役。危険サインや注意条件はルールで止める役。最後に薬剤師・医師に見せるカードへ変換します。</p>
+    <div class="grid two" style="margin-top:14px">
+      <button class="homeBtn" data-intent="otc"><strong>💊 市販薬を選びたい</strong><span>AIで不安整理 → 候補カテゴリ・商品例・購入前チェック</span></button>
+      <button class="homeBtn" data-intent="current"><strong>📷 今ある薬を相談したい</strong><span>写真・商品名・成分・不安をAI整理</span></button>
+      <button class="homeBtn" data-intent="selfcare"><strong>🌿 セルフケアを知りたい</strong><span>生活状況に合わせてケアを個別化</span></button>
+      <button class="homeBtn" data-intent="triage"><strong>🚨 受診すべきか迷う</strong><span>AIで整理しつつ、安全確認を強めに</span></button>
+      <button class="homeBtn" data-intent="pharmacist"><strong>🧑‍⚕️ 薬剤師に相談したい</strong><span>最短で相談カードと接続へ</span></button>
+      <button class="homeBtn" data-intent="lifestyle"><strong>🥗 栄養・運動・生活習慣</strong><span>食事・水分・睡眠・運動の現実的な一歩</span></button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="cardTitle"><h2>わたしの基本メモ</h2><span class="tag">毎回聞かない</span></div>
+    <p class="muted">年齢・妊娠授乳・持病・服薬・避けたい成分など。AIにもルール判定にも渡します。</p>
+    <details>
+      <summary>基本メモを編集</summary>
+      <div class="grid two">
+        <div><h3>年齢層</h3><select id="pfAge"><option value="">未設定</option><option>成人</option><option>中高生</option><option>乳幼児・小児</option><option>高齢者</option></select></div>
+        <div><h3>妊娠・授乳</h3><select id="pfPreg"><option value="">未設定</option><option>該当なし</option><option>妊娠中・妊娠可能性あり</option><option>授乳中</option><option>不明</option></select></div>
+      </div>
+      <h3>持病・体質・避けたい成分</h3>
+      <textarea id="pfRisk" placeholder="例：喘息、NSAIDsで息苦しさ、胃が弱い、緑内障、眠くなる薬は避けたい"></textarea>
+      <h3>服薬中の薬・サプリ</h3>
+      <textarea id="pfMeds" placeholder="例：鉄サプリ、血圧の薬、漢方、睡眠薬など"></textarea>
+      <h3>薬局接続</h3>
+      <div class="grid two">
+        <input id="pfPharmacy" type="text" placeholder="みどり薬局">
+        <input id="pfPhone" type="tel" placeholder="058-000-0000">
+      </div>
+      <input id="pfUrl" type="url" placeholder="https://example.com/pharmacy-chat" style="margin-top:10px">
+      <div class="copyRow">
+        <button class="secondary" id="saveProfile" type="button">基本メモを保存</button>
+        <button class="secondary" id="clearHistory" type="button">履歴を消す</button>
+      </div>
+    </details>
+    <div id="profileSummary" class="notice blue"></div>
+  </div>
+
+  <div class="card">
+    <div class="cardTitle"><h2>前回の相談</h2><span class="tag">この端末内</span></div>
+    <div id="lastBox" class="muted">まだ履歴はありません。</div>
+  </div>
+</section>
+
+<section class="page" id="modePage">
+  <div class="card">
+    <div class="modeHeader"><div class="modeIcon" id="modeIcon">💊</div><div><h2 id="modeTitle">相談</h2><p id="modeLead" class="muted"></p></div></div>
+
+    <div class="aiBox">
+      <h2>AIに自由入力で整理してもらう</h2>
+      <p class="muted">自然な言葉で書いてOK。AIは診断せず、「不安の整理」「追加で確認したいこと」「薬剤師カード文案」を作ります。</p>
+      <textarea id="freeText" placeholder="例：昨日から頭痛い。寝不足で、鉄サプリを飲んでる。家にある痛み止めを飲むか迷う。薬局に行くほどかも分からない。"></textarea>
+      <div class="copyRow">
+        <button class="purple" id="aiBtn" type="button">AIで整理する</button>
+        <button class="secondary" id="mockAiBtn" type="button">仮整理で試す</button>
+      </div>
+      <div id="aiStatus" class="small muted" style="margin-top:8px"></div>
+      <div id="aiResult" class="aiOut"></div>
+    </div>
+
+    <div id="modeFields"></div>
+  </div>
+</section>
+
+<section class="page" id="safetyPage">
+  <div class="card">
+    <h2>安全確認</h2>
+    <p class="muted" id="safetyLead">基本メモとAI整理を踏まえつつ、赤いサインだけはルールで確認します。</p>
+    <div id="safetyFields"></div>
+  </div>
+</section>
+
+<section class="page" id="resultPage"><div id="resultBox"></div></section>
+</main>
+
+<div class="footer">診断・治療・特定商品の推奨ではありません。AIは整理補助であり、危険サイン・妊娠授乳・持病・併用薬などは薬剤師/医師に確認してください。緊急時は119、または地域の救急相談を利用してください。</div>
+</div>
+
+<div class="fixed hidden" id="nav">
+  <div class="buttons">
+    <button class="secondary" id="backBtn" type="button">戻る</button>
+    <button class="primary" id="nextBtn" type="button">次へ</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+const STORE_H="yakkyokuAiV6History";
+const STORE_P="yakkyokuAiV6Profile";
+let step=0, intent="", photoData="", aiData=null;
+const pages=[...document.querySelectorAll(".page")];
+const route={
+  otc:{icon:"💊",label:"市販薬を選びたい",lead:"市販薬候補を見たい気持ちを優先しつつ、AIで不安を整理します。",safety:"standard"},
+  current:{icon:"📷",label:"今ある薬を相談したい",lead:"写真・商品名・成分・不安をAIで整理して、薬剤師カードにします。",safety:"standard"},
+  selfcare:{icon:"🌿",label:"セルフケアを知りたい",lead:"薬や症状問診に寄せすぎず、生活状況に合うケアをAIで個別化します。",safety:"light"},
+  triage:{icon:"🚨",label:"受診すべきか迷う",lead:"受診で迷うときは、安全確認を強めにして、受診先へつなぎます。",safety:"deep"},
+  pharmacist:{icon:"🧑‍⚕️",label:"薬剤師に相談したい",lead:"最短で相談カードを作り、薬局接続へ進みます。",safety:"standard"},
+  lifestyle:{icon:"🥗",label:"栄養・運動・生活習慣",lead:"食事・水分・睡眠・運動を、今日できる一歩に落とします。",safety:"light"}
+};
+const symptoms={
+  headache:{label:"頭痛・生理痛・筋肉痛",icon:"😣",map:"内科 脳神経内科 頭痛",dept:["内科","脳神経内科","婦人科"],care:["水分をとる","暗めの静かな場所で休む","肩首をゆるめる"],food:["水分","軽い食事","カフェイン取りすぎ注意"],otc:[["やさしめ痛み止めA（架空）","アセトアミノフェン系","発熱・頭痛の候補。肝機能・飲酒・重複は確認。"],["炎症痛み止めB（架空）","NSAIDs系","痛み・炎症に候補。ただし胃・腎臓・喘息・妊娠で注意。"],["局所ケアC（架空）","外用鎮痛消炎系","筋肉痛・肩首の痛みに。"]]},
+  cold:{label:"かぜ・発熱・のど・咳",icon:"🤧",map:"内科 耳鼻科 発熱 のど 咳",dept:["内科","耳鼻咽喉科"],care:["水分と休養","加湿する","飲酒や無理な運動を避ける"],food:["温かいスープ","水分","消化のよい食事"],otc:[["熱と痛みケアA（架空）","アセトアミノフェン系","熱・のど痛みの候補。"],["鼻水ケアB（架空）","抗ヒスタミン系","鼻水・くしゃみの候補。眠気注意。"],["咳たんケアC（架空）","去痰/咳止め系","咳や痰に。息苦しさは受診。"]]},
+  stomach:{label:"胃痛・胸やけ・吐き気",icon:"🤢",map:"内科 消化器内科 胃痛 吐き気",dept:["内科","消化器内科"],care:["刺激物を避ける","少量ずつ水分","食後すぐ横にならない"],food:["脂っこくない食事","白湯","消化のよいもの"],otc:[["胃酸ケアA（架空）","制酸/胃酸系","胸やけ・胃酸感の候補。"],["胃もたれケアB（架空）","消化酵素/健胃系","食べすぎ・胃もたれに。"],["受診相談C","医療相談","黒色便・吐血・強い腹痛・胸痛は受診。"]]},
+  lifestyle:{label:"生活習慣",icon:"🥗",map:"内科 生活習慣相談",dept:["内科","薬局"],care:["水分を一杯増やす","10分だけ休む/動く","今日の食事を一つ整える"],food:["主食＋たんぱく質","味噌汁/スープ","ヨーグルト/卵/豆腐など"],otc:[]}
+};
+
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]))}
+function val(n){let e=document.querySelector('input[name="'+n+'"]:checked');return e?e.value:""}
+function vals(n){return [...document.querySelectorAll('input[name="'+n+'"]:checked')].map(x=>x.value)}
+function field(id){return $(id)?$(id).value.trim():""}
+function today(){let d=new Date();return d.getFullYear()+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+String(d.getDate()).padStart(2,"0")+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+function getP(){try{return JSON.parse(localStorage.getItem(STORE_P)||"{}")}catch(e){return{}}}
+function setP(p){localStorage.setItem(STORE_P,JSON.stringify(p))}
+function getH(){try{return JSON.parse(localStorage.getItem(STORE_H)||"[]")}catch(e){return[]}}
+function setH(h){localStorage.setItem(STORE_H,JSON.stringify(h.slice(0,30)))}
+function opts(name, arr){return arr.map(x=>`<label class="option"><input type="radio" name="${name}" value="${esc(x)}">${esc(x)}</label>`).join("")}
+function checks(name, arr){return arr.map(x=>`<label class="option"><input type="checkbox" name="${name}" value="${esc(x)}">${esc(x)}</label>`).join("")}
+function symptomSelect(){
+ return `<h3>関連する症状</h3><div class="grid">
+  <label class="option"><input type="radio" name="symptomKey" value="headache">😣 頭痛・生理痛・筋肉痛</label>
+  <label class="option"><input type="radio" name="symptomKey" value="cold">🤧 かぜ・発熱・のど・咳</label>
+  <label class="option"><input type="radio" name="symptomKey" value="stomach">🤢 胃痛・胸やけ・吐き気</label>
+  <label class="option"><input type="radio" name="symptomKey" value="lifestyle">🥗 生活習慣・栄養運動</label>
+ </div>`;
+}
+function renderHome(){
+ const p=getP();
+ $("pfAge").value=p.age||"";$("pfPreg").value=p.preg||"";$("pfRisk").value=p.risk||"";$("pfMeds").value=p.meds||"";$("pfPharmacy").value=p.pharmacy||"みどり薬局";$("pfPhone").value=p.phone||"058-000-0000";$("pfUrl").value=p.url||"https://example.com/pharmacy-chat";
+ $("profileSummary").innerHTML = p.age||p.preg||p.risk||p.meds ? `<b>保存済み：</b>${esc([p.age,p.preg,p.risk,p.meds].filter(Boolean).join(" / "))}` : "まだ基本メモはありません。";
+ const h=getH();
+ $("lastBox").innerHTML = h.length ? `<div class="notice blue"><b>${esc(h[0].date)} / ${esc(h[0].intent)} / ${esc(h[0].status)}</b><br>${esc(h[0].action)}<div class="copyRow"><button class="secondary" data-open-history="${h[0].id}" type="button">前回を見る</button><button class="secondary" data-copy-dynamic="${esc(h[0].card)}" type="button">カードコピー</button></div></div>` : "まだ履歴はありません。";
+}
+function renderMode(){
+ const r=route[intent]||route.otc;
+ $("modeIcon").textContent=r.icon;$("modeTitle").textContent=r.label;$("modeLead").textContent=r.lead;$("aiResult").innerHTML="";$("aiStatus").textContent="";aiData=null;
+ let html="";
+ if(intent==="otc") html=`${symptomSelect()}<h3>希望</h3><div class="grid">${opts("priority",["早く楽になりたい","眠くなりにくい","シンプルな成分がいい","薬剤師確認前提で候補を見たい"])}</div>`;
+ if(intent==="current"||intent==="pharmacist") html=`<h3>薬の写真</h3><input id="photoInput" type="file" accept="image/*"><img id="photoPreview" class="preview"><h3>商品名</h3><input id="productName" type="text" placeholder="例：家にある頭痛薬、〇〇錠"><h3>成分が分かれば</h3><input id="ingredients" type="text" placeholder="例：アセトアミノフェン、イブプロフェン">${symptomSelect()}`;
+ if(intent==="selfcare") html=`<h3>今日知りたいこと</h3><div class="grid">${opts("selfGoal",["薬なしでできること","食事・水分を整えたい","休み方を知りたい","悪化時の目安を知りたい"])}</div><h3>今の余力</h3><div class="grid">${opts("energy",["ほぼ何もしたくない","少しならできる","ちゃんと整えたい"])}</div>`;
+ if(intent==="triage") html=`${symptomSelect()}<h3>迷っていること</h3><div class="grid">${opts("triageNeed",["今日行くべきか","何科に行くか","オンライン診療でよいか","救急相談すべきか"])}</div>`;
+ if(intent==="lifestyle") html=`<h3>整えたいこと</h3><div class="grid">${opts("lifeGoal",["食事・栄養","水分","睡眠","運動・姿勢","ストレス・休み方","便通"])}</div><h3>今の状態</h3><div class="grid">${checks("lifeState",["睡眠不足","水分不足","食事を抜いた","野菜・たんぱく質不足","画面作業が多い","肩こり","運動不足","ストレスが強い"])}</div>`;
+ html += `<h3>追加メモ</h3><textarea id="routeMemo" placeholder="AI整理後に補足したいことがあれば"></textarea>`;
+ $("modeFields").innerHTML=html;
+ const pi=$("photoInput");
+ if(pi) pi.addEventListener("change", e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f)return;
+  const rd=new FileReader(); rd.onload=()=>{photoData=rd.result; let img=$("photoPreview"); img.src=photoData; img.style.display="block"}; rd.readAsDataURL(f);
+ });
+}
+function renderSafety(){
+ const r=route[intent]||route.otc;
+ if(r.safety==="light"){
+  $("safetyLead").textContent="このモードでは、目的を邪魔しないように赤いサインだけ確認します。";
+  $("safetyFields").innerHTML=`<h3>当てはまる赤いサイン</h3><div class="grid">${checks("redFlags",["息苦しい・胸痛","意識がぼんやりする","急に強い痛み","吐血・血便・黒い便","顔や唇の腫れ・全身じんましん","症状が急激に悪化"])}</div>`;
+ }else if(r.safety==="deep"){
+  $("safetyLead").textContent="受診判断のため、赤いサイン・強さ・期間を確認します。";
+  $("safetyFields").innerHTML=`<h3>危険サイン</h3><div class="grid">${checks("redFlags",["息苦しい・胸痛・唇が紫っぽい","意識がぼんやりする・水分が取れない","突然の激しい頭痛・しびれ・ろれつが回らない","吐血・血便・黒い便","強い腹痛・冷汗・歩くと響く痛み","顔や唇の腫れ・全身じんましん・喘鳴","目の強い痛み・視力低下","症状が急激に悪化している"])}</div><h3>症状の強さ</h3><select id="severity"><option value="">選択</option><option>軽い</option><option>中等度</option><option>強い</option><option>非常に強い</option></select><h3>いつから？</h3><input id="duration" type="text" placeholder="例：昨日から、2週間以上">`;
+ }else{
+  $("safetyLead").textContent="基本メモに加えて、今回だけの赤いサインと薬を確認します。";
+  $("safetyFields").innerHTML=`<h3>赤いサイン</h3><div class="grid">${checks("redFlags",["息苦しい・胸痛","意識がぼんやりする・水分が取れない","急に強い痛み・しびれ・ろれつ異常","吐血・血便・黒い便","顔や唇の腫れ・全身じんましん","市販薬を使っても悪化・改善しない"])}</div><h3>今回だけ追加で伝えたい薬・サプリ</h3><textarea id="extraMeds" placeholder="例：今日だけ飲んだ薬、追加のサプリなど"></textarea>`;
+ }
+}
+function payload(){
+ return {
+  intent, intentLabel:(route[intent]||{}).label||"",
+  profile:getP(), freeText:field("freeText"), routeMemo:field("routeMemo"),
+  symptomKey:val("symptomKey"), symptom: (symptoms[val("symptomKey")]||{}).label || "",
+  priority:val("priority"), productName:field("productName"), ingredients:field("ingredients"),
+  selfGoal:val("selfGoal"), energy:val("energy"), triageNeed:val("triageNeed"),
+  lifeGoal:val("lifeGoal"), lifeState:vals("lifeState"),
+  redFlags:vals("redFlags"), severity:field("severity"), duration:field("duration"), extraMeds:field("extraMeds"),
+  history:getH().slice(0,3).map(x=>({date:x.date,intent:x.intent,status:x.status,action:x.action}))
+ };
+}
+function mockAi(data){
+ const text=data.freeText||data.routeMemo||"入力はまだ短めです。";
+ const inferred = data.symptom || (text.includes("頭")?"頭痛・生理痛・筋肉痛":text.includes("咳")||text.includes("熱")?"かぜ・発熱・のど・咳":data.intentLabel);
+ return {
+  summaryTitle:"AI仮整理：いま一番困っていること",
+  friendlyNote:"入力内容から見ると、「"+inferred+"」について、今どう動くかを整理したい状態に見えます。まず不安を短く分けて、必要なら薬剤師・医師につなげます。",
+  understood:["目的："+data.intentLabel,"症状/テーマ："+inferred,"気になる文脈："+text.slice(0,80)],
+  missingInfo:["赤いサインがないか","妊娠・授乳・持病・併用薬の確認","いつから・どのくらい強いか"],
+  todayActions:["まず赤いサインだけ確認する","基本メモに注意条件があれば薬剤師へ確認する","相談カードを作って見せる"],
+  selfCare:["水分をとる","無理せず休む","悪化・長引く場合は相談へ切り替える"],
+  otcDirection:"商品名ではなく、まず成分カテゴリと避けたい条件を確認するのが安全です。",
+  pharmacistCard:"薬剤師さんへ： "+text+" について相談したいです。基本メモと併用薬を踏まえて、使える市販薬や避けるべき成分を確認したいです。",
+  connectionRecommendation:"薬局相談カードをコピーして、薬剤師に見せるのがおすすめです。",
+  safetyNote:"息苦しさ、胸痛、意識がぼんやりする、急に強い痛みなどがあれば、薬局返信を待たず医療相談へ。"
+ };
+}
+function renderAi(ai, isMock){
+ aiData=ai;
+ $("aiResult").innerHTML=`
+  <div class="notice ${isMock?"warn":"purpleBg"}"><b>${esc(ai.summaryTitle||"AI整理")}</b><br>${esc(ai.friendlyNote||"")}</div>
+  <div class="aiChip"><b>AIが理解したこと</b><ul>${(ai.understood||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+  <div class="aiChip"><b>追加で確認したいこと</b><ul>${(ai.missingInfo||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+  <div class="aiChip"><b>今日やること</b><ul>${(ai.todayActions||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+  <details open><summary>薬剤師カード文案</summary><div class="memo">${esc(ai.pharmacistCard||"")}</div></details>`;
+}
+async function callAi(){
+ const data=payload();
+ if(!data.freeText && !data.routeMemo){alert("まず自由入力か追加メモを書いてください。");return}
+ $("aiBtn").disabled=true;$("aiStatus").textContent="AIで整理中...";$("aiStatus").className="small muted loading";
+ try{
+  const res=await fetch("/.netlify/functions/ai-consult",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+  if(!res.ok) throw new Error("AI function error "+res.status);
+  const json=await res.json();
+  renderAi(json.ai||json,false);
+  $("aiStatus").textContent="AI整理が完了しました。";
+ }catch(e){
+  const ai=mockAi(data);
+  renderAi(ai,true);
+  $("aiStatus").textContent="AI接続が未設定/失敗したため、仮整理を表示しました。";
+ }finally{
+  $("aiStatus").className="small muted";$("aiBtn").disabled=false;
+ }
+}
+function judge(data){
+ const p=data.profile||{}, pf=[p.preg,p.risk,p.meds,data.extraMeds].join(" ");
+ let level=0,reasons=[];
+ if(data.redFlags.length){level=2;reasons.push("赤いサインに該当があります");}
+ if(data.severity==="非常に強い"){level=2;reasons.push("症状が非常に強いです");}
+ if(data.severity==="強い"){level=Math.max(level,1);reasons.push("症状が強めです");}
+ if((data.duration||"").match(/2週間|２週間|1週間|１週間|長/)){level=Math.max(level,1);reasons.push("症状が長引いています");}
+ if(/妊娠|授乳/.test(pf)){level=Math.max(level,1);reasons.push("妊娠・授乳の確認が必要です");}
+ if(/喘息|NSAIDs|息苦|胃|腎|肝|緑内障|前立腺|高血圧|心臓/.test(pf)){level=Math.max(level,1);reasons.push("基本メモに注意すべき体質・持病があります");}
+ if(intent==="triage"){level=Math.max(level,1);}
+ if(!reasons.length)reasons.push("入力上、強い危険サインは目立ちません。");
+ return {level,reasons};
+}
+function status(j){
+ if(j.level===2)return {name:"赤信号",cls:"danger",icon:"🚨",title:"受診・救急相談を優先",action:"市販薬やセルフケアで粘らず、医療機関・救急相談を優先",visit:"今日中〜緊急相談",otc:"自己判断で選ばない"};
+ if(j.level===1)return {name:"黄信号",cls:"warn",icon:"⚠️",title:"専門家に確認してから判断",action:"条件を伝えて、薬剤師・医師に確認してから進める",visit:"悪化・長引くなら受診",otc:"候補あり。ただし要確認"};
+ return {name:"緑信号",cls:"ok",icon:"✅",title:"目的に沿って進めてOK",action:"今日できることから進める。必要なら薬剤師に確認",visit:"改善しなければ相談",otc:"候補あり"};
+}
+function inf(data){return symptoms[data.symptomKey] || (intent==="lifestyle"?symptoms.lifestyle:symptoms.headache)}
+function cautions(data){
+ const p=data.profile||{}, t=[p.risk,p.meds,p.preg,data.extraMeds].join(" "); let list=[];
+ if(/NSAIDs|喘息|息苦/.test(t))list.push(["NSAIDs系","イブプロフェン・ロキソプロフェンなどは、自己判断で選ばず確認。"]);
+ if(/妊娠|授乳/.test(t))list.push(["妊娠・授乳中の使用可否","妊娠週数・授乳状況を伝えて薬剤師/医師に確認。"]);
+ if(/胃|腎|肝|抗凝固|血液|ワルファリン/.test(t))list.push(["内服薬の相性","胃・腎臓・肝臓・出血リスクに関わる薬は確認。"]);
+ if(!list.length)list.push(["成分重複","総合薬や複数の薬では、同じ成分の重複を確認。"]);
+ return list;
+}
+function cardText(data, st, caution){
+ const p=data.profile||{};
+ return [
+  "【薬局に行く前メモ+ AI v6】",
+  "入口："+data.intentLabel,
+  "判定："+st.name+" / "+st.title,
+  "おすすめ："+st.action,
+  "",
+  "AI整理："+(aiData?aiData.friendlyNote:"未実行"),
+  "",
+  "自由入力："+(data.freeText||"なし"),
+  "症状/テーマ："+(data.symptom||data.lifeGoal||"未入力"),
+  "商品名："+(data.productName||"未入力"),
+  "成分："+(data.ingredients||"未入力"),
+  "基本メモ：年齢="+(p.age||"未設定")+" / 妊娠授乳="+(p.preg||"未設定")+" / 体質="+(p.risk||"未設定")+" / 服薬="+(p.meds||"未設定"),
+  "赤いサイン："+(data.redFlags.length?data.redFlags.join("、"):"該当なし/未入力"),
+  "期間："+(data.duration||"未入力"),
+  "強さ："+(data.severity||"未入力"),
+  "追加メモ："+(data.routeMemo||"なし"),
+  "",
+  "薬剤師カード文案：",
+  aiData && aiData.pharmacistCard ? aiData.pharmacistCard : "上記内容について、OTC・セルフケア・受診目安を確認したいです。",
+  "",
+  "注意点：",
+  caution.map(x=>"・"+x[0]+"："+x[1]).join("\n")
+ ].join("\n");
+}
+function renderResult(){
+ const data=payload(), j=judge(data), st=status(j), info=inf(data), caution=cautions(data), card=cardText(data,st,caution);
+ const p=data.profile||{}, ph=p.pharmacy||"みどり薬局", phone=p.phone||"058-000-0000", url=p.url||"https://example.com/pharmacy-chat";
+ const h=getH(); const item={id:Date.now(),date:today(),intent:data.intentLabel,status:st.name,action:st.action,card}; h.unshift(item);setH(h);renderHome();
+ let modeMain="";
+ if(intent==="otc"){
+  modeMain=`<div class="card"><h2>市販薬候補カード</h2><p class="muted">架空商品例です。本物の商品推奨ではありません。</p><div class="grid">${info.otc.map((x,i)=>`<div class="miniCard rowCard"><div class="num">${i+1}</div><div><div class="itemTitle">${esc(x[0])}</div><p class="small muted">${esc(x[1])}</p><p>${esc(x[2])}</p></div></div>`).join("")}</div></div>`;
+ }else if(intent==="selfcare"||intent==="lifestyle"){
+  const care = aiData && aiData.selfCare && aiData.selfCare.length ? aiData.selfCare : info.care;
+  modeMain=`<div class="card"><h2>今日できるケア</h2><div class="grid">${care.map((x,i)=>`<div class="miniCard rowCard"><div class="num">${i+1}</div><div><b>${esc(x)}</b></div></div>`).join("")}</div><h3>食事・水分候補</h3><ul>${info.food.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
+ }else{
+  modeMain=`<div class="card"><h2>相談内容の整理</h2>${photoData?`<img src="${photoData}" class="preview" style="display:block">`:""}<div class="notice blue">${esc(aiData&&aiData.connectionRecommendation?aiData.connectionRecommendation:"相談カードを見せて、薬剤師・医師に確認しましょう。")}</div></div>`;
+ }
+ const q=encodeURIComponent("近くの "+info.map), online=encodeURIComponent(info.map+" オンライン診療");
+ $("resultBox").innerHTML=`
+  <div class="resultHero ${st.cls}"><span class="statusBadge">${st.icon} ${st.name}</span><div class="gentle">${esc(aiData&&aiData.friendlyNote?aiData.friendlyNote:"入力内容を整理しました。")}</div><div class="bigAction">${esc(st.action)}</div><div class="kpi"><div class="kpiBox"><div class="label">入口</div><div class="value">${esc(data.intentLabel)}</div></div><div class="kpiBox"><div class="label">OTC方針</div><div class="value">${esc(st.otc)}</div></div><div class="kpiBox"><div class="label">受診目安</div><div class="value">${esc(st.visit)}</div></div></div></div>
+  <div class="card"><h2>今日やること</h2><div class="grid">${(aiData&&aiData.todayActions?aiData.todayActions:["赤いサインを確認する","必要なら相談カードを見せる","悪化・長引くなら受診"]).map((x,i)=>`<div class="miniCard rowCard"><div class="num">${i+1}</div><div><b>${esc(x)}</b></div></div>`).join("")}</div><h3>ルール判定の理由</h3><ul>${j.reasons.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+  ${modeMain}
+  <div class="card"><h2>避けたい / 確認したいこと</h2>${caution.map(x=>`<div class="notice warn"><b>${esc(x[0])}</b><br>${esc(x[1])}</div>`).join("")}</div>
+  <div class="card"><h2>必要な場所へつなぐ</h2><div class="connectGrid"><a class="buttonLink primary" href="tel:${esc(phone)}">${esc(ph)}に電話</a><a class="buttonLink primary" target="_blank" href="${esc(url)}">LINE/Web相談</a><a class="buttonLink secondary" target="_blank" href="https://www.google.com/maps/search/${q}">近くの受診先</a><a class="buttonLink secondary" target="_blank" href="https://www.google.com/search?q=${online}">オンライン診療</a></div><p class="small muted">緊急時は返信を待たず、119または医療機関へ。</p></div>
+  <div class="card"><details open><summary>薬剤師・医師に見せるカード</summary><div class="memo">${esc(card)}</div><div class="copyRow"><button class="secondary" data-copy-dynamic="${esc(card)}" type="button">カードをコピー</button><button class="secondary" data-open-history="${item.id}" type="button">履歴で見る</button></div></details></div>`;
+}
+function show(){
+ pages.forEach((p,i)=>p.classList.toggle("active",i===step));
+ $("stepText").textContent=step===0?"ホーム":`${step}/${pages.length-1}`;
+ $("bar").style.width=step===0?"0%":((step-1)/(pages.length-2)*100)+"%";
+ $("nav").classList.toggle("hidden",step===0);
+ $("nextBtn").textContent=step===pages.length-1?"ホームに戻る":(step===pages.length-2?"結果を作る":"次へ");
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function openHistory(id){
+ const item=getH().find(x=>String(x.id)===String(id)); if(!item)return;
+ $("resultBox").innerHTML=`<div class="card"><h2>過去の相談</h2><div class="notice blue"><b>${esc(item.date)} / ${esc(item.intent)} / ${esc(item.status)}</b><br>${esc(item.action)}</div><div class="memo">${esc(item.card)}</div><div class="copyRow"><button class="secondary" data-copy-dynamic="${esc(item.card)}" type="button">カードをコピー</button></div></div>`;
+ step=pages.length-1;show();
+}
+document.body.addEventListener("click",e=>{
+ const i=e.target.closest("[data-intent]"); if(i){intent=i.getAttribute("data-intent");renderMode();renderSafety();step=1;show();return}
+ const c=e.target.closest("[data-copy-dynamic]"); if(c){navigator.clipboard?navigator.clipboard.writeText(c.getAttribute("data-copy-dynamic")).then(()=>alert("コピーしました")):alert("長押しでコピーしてください");return}
+ const h=e.target.closest("[data-open-history]"); if(h){openHistory(h.getAttribute("data-open-history"));return}
+});
+$("aiBtn").onclick=callAi;
+$("mockAiBtn").onclick=()=>renderAi(mockAi(payload()),true);
+$("backBtn").onclick=()=>{if(step>1){step--;show()}else{step=0;show()}};
+$("nextBtn").onclick=()=>{if(step===pages.length-1){step=0;show();return} if(step===pages.length-2)renderResult(); step++;show()};
+$("saveProfile").onclick=()=>{setP({age:$("pfAge").value,preg:$("pfPreg").value,risk:$("pfRisk").value.trim(),meds:$("pfMeds").value.trim(),pharmacy:$("pfPharmacy").value.trim()||"みどり薬局",phone:$("pfPhone").value.trim()||"058-000-0000",url:$("pfUrl").value.trim()||"https://example.com/pharmacy-chat"});renderHome();alert("保存しました")};
+$("clearHistory").onclick=()=>{if(confirm("履歴を消しますか？")){localStorage.removeItem(STORE_H);renderHome()}};
+(function init(){renderHome();show()})();
+})();
+</script>
+</body>
+</html>
